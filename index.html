@@ -1,202 +1,98 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>Trevor Gift - 2 in 1 Forest & Bike Rush</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>GIFT GAME - Beautiful Forest Temple Run</title>
 <style>
-:root{--green:#78d155;--dark:#1a3d16}
-body{margin:0;background:#11210e;color:#fff;font-family:system-ui,Arial;text-align:center;overflow-x:hidden}
-.topbar{display:flex;gap:8px;padding:8px;justify-content:center;background:#000a;position:sticky;top:0;z-index:10;flex-wrap:wrap}
-.tab{padding:10px 18px;border-radius:99px;border:2px solid var(--green);font-weight:900;cursor:pointer;background:#000;color:#fff}
-.tab.active{background:var(--green);color:#000;box-shadow:0 0 18px var(--green)}
-.hud{display:flex;gap:6px;justify-content:center;margin:8px;flex-wrap:wrap}
-.pill{background:#000c;padding:6px 12px;border-radius:20px;font-weight:900;border:1px solid #ffffff22}
-canvas{width:100%;max-width:760px;height:480px;border:4px solid var(--green);border-radius:18px;background:#6bb8ff;display:block;margin:0 auto;touch-action:none}
-#msg{min-height:34px;font-weight:900;font-size:19px;margin:8px;text-shadow:0 2px 8px #000}
-.controls{display:flex;gap:8px;max-width:760px;margin:0 auto;padding:0 8px}
-.controls button{padding:16px 10px;border-radius:16px;border:2px solid var(--green);font-weight:900;font-size:20px;flex:1}
-#runBtn{background:var(--green);color:#000;flex:1.6;font-size:22px}
-#startBtn{margin:10px auto;width:100%;max-width:760px;background:#fff;color:#000;padding:14px;border-radius:16px;font-weight:900;font-size:20px;border:0}
-.bike-only{display:none}.foot-only{display:none}
-body.mode-bike.bike-only{display:block}body.mode-bike.bike-only.flex{display:flex}
-body.mode-foot.foot-only{display:block}body.mode-foot.foot-only.flex{display:flex}
-.giftShout{animation:pop 0.3s ease}
-@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.35)}100%{transform:scale(1)}}
+*{margin:0;padding:0;box-sizing:border-box;touch-action:none;-webkit-tap-highlight-color:transparent}
+body{background:#0a1a0a;font-family:system-ui,sans-serif;overflow:hidden;color:white}
+#hud{position:absolute;top:0;left:0;right:0;z-index:20;padding:8px;display:flex;flex-direction:column;gap:5px;pointer-events:none}
+.row{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.pill{pointer-events:auto;padding:7px 14px;border-radius:20px;font-weight:800;font-size:12px;border:2px solid #22c55e;background:#052e16;color:white;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+.pill.active{background:#22c55e;color:black;box-shadow:0 0 15px #22c55e}
+#gameCanvas{width:100vw;height:100vh;display:block}
+#controls{position:absolute;bottom:10px;left:10px;right:10px;z-index:20;display:flex;justify-content:space-between;align-items:end}
+.sideBtn{width:30%;height:110px;border-radius:20px;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.2);display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;font-weight:800;backdrop-filter:blur(8px)}
+#centerControls{display:flex;flex-direction:column;gap:8px;width:35%;align-items:center}
+.actionBtn{width:100%;height:52px;border-radius:16px;border:none;font-weight:900;font-size:14px}
+#jumpBtn{background:#facc15;color:black}
+#accBtn{background:#22c55e;color:black}
+#msg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:30;background:rgba(5,20,5,.92);padding:22px;border-radius:20px;text-align:center;border:3px solid #22c55e;max-width:90%;display:block}
+h1{font-size:20px;margin-bottom:8px}
+p{font-size:13px;line-height:1.4;color:#cbd5e1;margin:6px 0}
+#tapHint{position:absolute;bottom:140px;left:50%;transform:translateX(-50%);z-index:15;background:rgba(0,0,0,.6);padding:6px 12px;border-radius:20px;font-size:12px;color:white;pointer-events:none}
 </style>
 </head>
-<body class="mode-foot">
-<div class="topbar">
-  <button id="tabFoot" class="tab active">🌳 FOOT RUN - Trevor Forest Path</button>
-  <button id="tabBike" class="tab">🏍️ BIKE RUSH - Raving Motorbike</button>
+<body>
+<div id="hud">
+<div class="row">
+<button class="pill active" id="bFoot" onclick="setMode('foot')">🌳 FOOT - Trevor</button>
+<button class="pill" id="bBike" onclick="setMode('bike')">🏍️ BIKE - Dashcam</button>
 </div>
-
-<div class="hud">
-  <span id="levelPill" class="pill">Level 1 - Sunny Meadow</span>
-  <span id="lightPill" class="pill">GREEN</span>
-  <span id="scorePill" class="pill">🍎 0</span>
-  <span id="progPill" class="pill">0%</span>
-  <span id="speedPill" class="pill bike-only">💨 0 km/h</span>
+<div class="row">
+<span class="pill">🍓 <span id="s">0</span></span>
+<span class="pill"><span id="d">0</span>m</span>
+<span class="pill" style="background:#f59e0b;border-color:#f59e0b;color:black" onclick="toggleVoice()">🔊 <span id="vTxt">African Voice ON</span></span>
 </div>
-
-<canvas id="c" width="760" height="480"></canvas>
-<div id="msg" class="giftShout">Choose your mode! Foot Run or Motorbike Rush? 🌳🏍️</div>
-
-<div class="controls flex">
-  <button id="leftBtn">⬅️</button>
-  <button id="runBtn"><span class="foot-only">🏃 HOLD TO RUN</span><span class="bike-only">🏍️ HOLD TO ACCELERATE</span></button>
-  <button id="rightBtn">➡️</button>
 </div>
-<button id="startBtn">START</button>
-
-<div class="foot-only" style="max-width:760px;margin:10px auto;opacity:0.8;font-size:14px">Green Light = Run, Red Light = Freeze! Dodge 🪨🪵 collect 🍎</div>
-<div class="bike-only" style="max-width:760px;margin:10px auto;opacity:0.9;font-size:14px;font-weight:800">🏍️ TEMPLE RUN STYLE! Dodge trees, jump logs, shout GIFT GIFT! Hold to boost, swipe to dodge!</div>
-
-<script type="module">
-let mode = 'foot';
-const body = document.body;
-const c = document.getElementById('c'); const ctx = c.getContext('2d');
-const msg = document.getElementById('msg');
-function say(t, rate=1){try{speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(t);u.rate=rate;u.pitch=mode==='bike'?0.8:1.1;u.volume=1;speechSynthesis.speak(u);}catch{}}
-let giftInterval;
-function startGiftShout(){clearInterval(giftInterval); if(mode!=='bike')return; let count=0; giftInterval=setInterval(()=>{ if(!game.running)return; let texts=["GIFT! GIFT!","GIFT GIFT GO GO!","GIFT!","LET'S GO GIFT!"]; let txt=texts[Math.floor(Math.random()*texts.length)]; msg.textContent="🏍️ "+txt+" 🏍️"; msg.classList.remove('giftShout'); void msg.offsetWidth; msg.classList.add('giftShout'); say(txt,1.15); count++; }, 2200);}
-
-const FOOT_LEVELS=[
-{name:"Sunny Meadow Trail",kind:"lights",guard:"🦉",treat:"🍎",green:6500,red:1700,speed:0.85,goal:1300},
-{name:"Butterfly Path",kind:"lights",guard:"🦋",treat:"🍓",green:6000,red:2000,speed:0.9,goal:1500},
-{name:"Magic Bridge",kind:"bridge",guard:"🧚",treat:"💎",green:5400,red:2100,speed:1.15,goal:1700},
-{name:"Racing Horse",kind:"race",guard:"🏁",treat:"🥕",green:8000,red:1500,speed:1.2,goal:1900,rival:{icon:"🐎",speed:0.52,label:"Thunder"}},
-{name:"Racing Bicycle",kind:"race",guard:"🚴",treat:"🍋",green:9000,red:1500,speed:1.25,goal:2100,rival:{icon:"🚲",speed:0.6,label:"Zippy"}},
-{name:"Sparkle Grove",kind:"lights",guard:"🦁",treat:"⭐",green:4800,red:2600,speed:1.05,goal:2300},
-];
-
-const BIKE_LEVELS=[
-{name:"Forest Entry - Raving Start",goal:1800,baseSpeed:1.6, maxSpeed:2.8, obstacleFreq:38, treat:"⛽"},
-{name:"Pine Storm Path",goal:2400,baseSpeed:1.9, maxSpeed:3.2, obstacleFreq:32, treat:"💎"},
-{name:"Mud Splash Curve",goal:3000,baseSpeed:2.2, maxSpeed:3.6, obstacleFreq:28, treat:"🔥"},
-{name:"Thunder Hill Climb",goal:3800,baseSpeed:2.5, maxSpeed:4.0, obstacleFreq:24, treat:"⭐"},
-];
-
-let level=0,score=0,phase="ready";
-let game={dist:0,x:0,targetX:0,rival:0,bob:0,items:[],running:false,red:false,holding:false,steer:0,speed:0};
-
-function buildItemsFoot(lv){
- let items=[];
- for(let z=60;z<lv.goal+60;z+=26){items.push({z:z+Math.random()*8,lane:-2.6,type:"tree",icon:"🌳",gone:false});items.push({z:z+Math.random()*8,lane:2.6,type:"tree",icon:"🌲",gone:false});}
- for(let z=120;z<lv.goal-40;z+=55+Math.random()*45){let lane=[-1,0,1][Math.floor(Math.random()*3)]; if(Math.random()<0.55)items.push({z,lane,type:Math.random()<0.5?"rock":"log",icon:Math.random()<0.5?"🪨":"🪵",gone:false}); else items.push({z,lane,type:"treat",icon:lv.treat,gone:false});}
- return items;
-}
-function buildItemsBike(lv){
- let items=[];
- for(let z=60;z<lv.goal+200;z+=18){items.push({z:z+Math.random()*5,lane:-2.7,type:"tree",icon:Math.random()<0.5?"🌳":"🌲",gone:false});items.push({z:z+Math.random()*5,lane:2.7,type:"tree",icon:Math.random()<0.5?"🌳":"🌲",gone:false});}
- for(let z=100;z<lv.goal;z+=lv.obstacleFreq+Math.random()*20){
-  let lane=[-1.2,-0.4,0.4,1.2][Math.floor(Math.random()*4)];
-  let r=Math.random();
-  if(r<0.55) items.push({z,lane,type:"rock",icon:["🪨","🪵","🪨","🚧"][Math.floor(Math.random()*4)],gone:false});
-  else if(r<0.75) items.push({z,lane,type:"jump",icon:"🪵",gone:false, low:true});
-  else items.push({z,lane,type:"treat",icon:lv.treat,gone:false});
- }
- return items;
-}
-
-function getLevels(){ return mode==='foot'?FOOT_LEVELS:BIKE_LEVELS }
-function currentLevel(){ return getLevels()[level] }
-
-function startLevel(idx){
- let lvls=getLevels(); let i=Math.min(idx,lvls.length-1); level=i; let l=lvls[i];
- let items = mode==='foot'?buildItemsFoot(l):buildItemsBike(l);
- game={dist:0,x:0,targetX:0,rival:0,bob:0,items,running:true,red:false,holding:false,steer:0,speed:l.baseSpeed||1.5};
- phase= mode==='foot'?"green":"racing";
- score=0; document.getElementById('scorePill').textContent=`${l.treat} 0`;
- document.getElementById('levelPill').textContent=`Level ${i+1}/${lvls.length} · ${l.name}`;
- if(mode==='foot'){
-  document.getElementById('lightPill').style.display='inline-block';
-  document.getElementById('lightPill').textContent="GREEN";
-  document.getElementById('lightPill').style.background="#22c55e";
-  msg.textContent=`${l.name} — Green Light Go!`; say(`${l.name}. Green light. Go Trevor!`); scheduleLight();
- }else{
-  document.getElementById('lightPill').style.display='none';
-  msg.textContent=`🏍️ ${l.name} — HOLD TO BOOST! GIFT! GIFT!`; say("Raving Motorbike! Gift! Gift! Go!",1.1); startGiftShout();
- }
-}
-
-let lightTimer;
-function scheduleLight(){clearTimeout(lightTimer); if(mode!=='foot')return; let lv=FOOT_LEVELS[level]; let base=phase==="green"?lv.green:lv.red;
- lightTimer=setTimeout(()=>{ phase=phase==="green"?"red":"green"; game.red=phase==="red"; let pill=document.getElementById('lightPill'); pill.textContent=phase.toUpperCase(); pill.style.background=phase==="red"?"#ef4444":"#22c55e";
- if(phase==="red"){msg.textContent="🔴 RED LIGHT — FREEZE!"; say("Red light! Freeze Trevor!",1.1);}else{msg.textContent="🟢 GREEN LIGHT — RUN!"; say("Green light! Run Trevor!",1.1);}
- if(game.running) scheduleLight();}, base+Math.random()*900);
-}
-
-function finish(won,text){
- game.running=false; clearTimeout(lightTimer); clearInterval(giftInterval);
- msg.textContent=text; say(text, won?1:0.9); phase=won?"won":"lost";
- document.getElementById('startBtn').textContent=won?(level+1<getLevels().length?"NEXT TRACK":"AGAIN!"):"TRY AGAIN";
-}
-
-function loop(){
- requestAnimationFrame(loop);
- let g=game; let L=currentLevel(); if(!L) return;
- let W=c.width,H=c.height;
- if(g.running){
-  g.x+=(g.targetX-g.x)*0.18; g.targetX=Math.max(-1.35,Math.min(1.35,g.targetX+g.steer*0.08));
-  if(g.holding){
-   if(mode==='foot' && g.red){ finish(false,"Moved on red! Good trial Trevor, let's go again!"); }
-   else{
-    if(mode==='bike'){
-     g.speed = Math.min(L.maxSpeed, g.speed+0.04); g.dist+=g.speed; g.bob+=0.32;
-     document.getElementById('speedPill').textContent=`💨 ${Math.floor(g.speed*45)} km/h`;
-    }else{ g.dist+=L.speed; g.bob+=0.22; }
-    let p=Math.min(100,(g.dist/L.goal)*100); document.getElementById('progPill').textContent=Math.floor(p)+"%";
-    if(g.dist>=L.goal) finish(true, mode==='bike'?`YOU DID IT! GIFT GIFT! Track cleared! 🏍️💨`:`Amazing Trevor! ${["Good trial Trevor, let's go again!","Super fast legs!"][Math.floor(Math.random()*2)]}`);
-   }
-  }else{
-   if(mode==='bike'){ g.speed=Math.max(L.baseSpeed*0.6,g.speed-0.025); g.bob+=0.1; document.getElementById('speedPill').textContent=`💨 ${Math.floor(g.speed*45)} km/h`; }
-  }
-  if(mode==='foot' && L.rival &&!g.red){ g.rival+=L.rival.speed; if(g.rival>=L.goal) finish(false,`${L.rival.label} won! Good trial Trevor, let's go again!`); }
-  for(let it of g.items){ if(it.gone||it.type==="tree")continue; let dz=it.z-g.dist; if(dz>-4&&dz<5.5&&Math.abs(it.lane-g.x)<0.85){
-   if(it.type==="treat"){ it.gone=true; score++; document.getElementById('scorePill').textContent=`${L.treat} ${score}`; if(mode==='bike'){say("Gift!",1.3); msg.textContent="GIFT! +1 ⛽";} }
-   else if(it.type==="jump"){ if(mode==='bike' && g.speed<2.0){ it.gone=true; finish(false,"You hit a log! Jump needs speed! GIFT GIFT, try again!"); } }
-   else{ it.gone=true; finish(false, mode==='bike'?"CRASH! 💥 GIFT GIFT, let's go again!":"Bump! Good trial Trevor, let's go again!"); }
-  }}
- }
- let bobY=Math.sin(g.bob)*(mode==='bike'?8:5); let horizon=H*0.32+bobY;
- ctx.fillStyle=mode==='bike'?"#1f4a2a":"#87ceeb"; ctx.fillRect(0,0,W,horizon);
- let grd=ctx.createLinearGradient(0,horizon,0,H); if(mode==='bike'){grd.addColorStop(0,"#2d5a27");grd.addColorStop(1,"#0f2310");}else{grd.addColorStop(0,"#3f7d33");grd.addColorStop(1,"#2b5722");} ctx.fillStyle=grd; ctx.fillRect(0,horizon,W,H-horizon);
- let cx=W/2-g.x*70; let scaleAt=dz=>680/Math.max(1,dz); let project=(lane,dz)=>{let s=scaleAt(dz); return{sx:cx+(lane-g.x)*s*0.58,sy:horizon+s*0.44,s};};
- let near=project(0,6),far=project(0,340); let nearW=near.s*(mode==='bike'?2.2:1.5),farW=far.s*(mode==='bike'?2.2:1.5);
- ctx.beginPath(); ctx.moveTo(near.sx-nearW,H); ctx.lineTo(far.sx-farW,far.sy); ctx.lineTo(far.sx+farW,far.sy); ctx.lineTo(near.sx+nearW,H); ctx.closePath(); ctx.fillStyle=mode==='bike'?"#3a3a3a":"#a8763e"; ctx.fill();
- ctx.fillStyle=mode==='bike'?"#f5d547":"#fff"; for(let i=0;i<24;i++){let dz=10+i*14-(g.dist%14); let p=project(0,dz); let w=p.s*0.08; ctx.fillRect(p.sx-w,p.sy,w*2,p.s*0.06);}
- let visible=g.items.map(it=>({it,dz:it.z-g.dist})).filter(o=>o.dz>4&&o.dz<320&&!o.it.gone).sort((a,b)=>b.dz-a.dz);
- ctx.textAlign="center"; ctx.textBaseline="bottom";
- for(let{it,dz}of visible){let p=project(it.lane,dz); let size=Math.min(280,p.s*(it.type==="tree"?0.95:0.46)); ctx.font=`${size}px serif`; ctx.fillText(it.icon,p.sx,p.sy+size*0.15);}
- if(mode==='foot'&&currentLevel().rival){let dz=g.rival-g.dist; if(dz>4&&dz<320){let p=project(0.9,dz); let size=Math.min(240,p.s*0.5); ctx.font=`${size}px serif`; ctx.fillText(currentLevel().rival.icon,p.sx,p.sy+size*0.1);}}
- let dzGoal=currentLevel().goal-g.dist; if(dzGoal>2&&dzGoal<340){let p=project(0,dzGoal); let size=Math.min(300,p.s*0.6); ctx.font=`${size}px serif`; ctx.fillText("🏁",p.sx,p.sy+size*0.1);}
- let playerY=H-42+Math.sin(g.bob)*4; let playerX=W/2+Math.sin(g.bob*0.5)*4;
- ctx.font=`${mode==='bike'?64:52}px serif`; ctx.fillText(mode==='bike'?"🏍️":"🏃‍♂️",playerX,playerY);
- if(g.red&&g.running&&mode==='foot'){ctx.fillStyle="rgba(220,38,38,0.3)"; ctx.fillRect(0,0,W,H);}
-}
-loop();
-
-function switchMode(newMode){
- mode=newMode; body.className='mode-'+newMode;
- document.getElementById('tabFoot').classList.toggle('active',newMode==='foot');
- document.getElementById('tabBike').classList.toggle('active',newMode==='bike');
- level=0; phase="ready"; game.running=false; clearTimeout(lightTimer); clearInterval(giftInterval);
- document.getElementById('startBtn').textContent="START";
- if(newMode==='bike'){msg.textContent="🏍️ Raving Motorbike Mode! Temple Run in Forest! Shouting GIFT GIFT!"; say("Motorbike mode! Gift Gift! Let's rave!");}
- else{msg.textContent="🌳 Forest Foot Run! Green light go, red light freeze!"; say("Forest foot run!");}
-}
-document.getElementById('tabFoot').onclick=()=>switchMode('foot');
-document.getElementById('tabBike').onclick=()=>switchMode('bike');
-
-document.getElementById('startBtn').onclick=()=>{ if(phase==="won")startLevel(level+1>=getLevels().length?0:level+1); else if(phase==="ready"||phase==="lost")startLevel(level); else startLevel(level); };
-let left=document.getElementById('leftBtn'), right=document.getElementById('rightBtn'), run=document.getElementById('runBtn');
-left.onpointerdown=(e)=>{e.preventDefault();game.steer=-1}; left.onpointerup=()=>game.steer=0; left.onpointerleave=()=>game.steer=0;
-right.onpointerdown=(e)=>{e.preventDefault();game.steer=1}; right.onpointerup=()=>game.steer=0; right.onpointerleave=()=>game.steer=0;
-run.onpointerdown=(e)=>{e.preventDefault();game.holding=true}; run.onpointerup=()=>game.holding=false; run.onpointerleave=()=>game.holding=false;
-c.addEventListener('pointerdown',e=>{let r=c.getBoundingClientRect(); let x=(e.clientX-r.left)/r.width; if(x<0.33)game.steer=-1; else if(x>0.66)game.steer=1; else game.holding=true;});
-c.addEventListener('pointerup',()=>{game.steer=0; game.holding=false;});
-window.addEventListener('keydown',e=>{let k=e.key.toLowerCase(); if(["w","arrowup"," "].includes(k)){e.preventDefault();game.holding=true;} if(k==="a"||k==="arrowleft")game.steer=-1; if(k==="d"||k==="arrowright")game.steer=1;});
-window.addEventListener('keyup',e=>{let k=e.key.toLowerCase(); if(["w","arrowup"," "].includes(k))game.holding=false; if(["a","d","arrowleft","arrowright"].includes(k))game.steer=0;});
+<canvas id="gameCanvas"></canvas>
+<div id="tapHint">👆 TAP LEFT / RIGHT to move • CENTER to JUMP • HOLD GREEN to VROOOM</div>
+<div id="controls">
+<div class="sideBtn" id="leftZone">◀️<br>LEFT</div>
+<div id="centerControls">
+<button class="actionBtn" id="jumpBtn">⬆️ JUMP</button>
+<button class="actionBtn" id="accBtn">HOLD TO RUN 🏃</button>
+</div>
+<div class="sideBtn" id="rightZone">▶️<br>RIGHT</div>
+</div>
+<div id="msg">
+<h1>🌳 GIFT GAME - AFRICA 🌍</h1>
+<p><b>Temple Run Dashcam View!</b></p>
+<p>✅ TAP LEFT/RIGHT side = change lane<br>✅ TAP MIDDLE = JUMP<br>✅ HOLD GREEN = ACCELERATE + ENGINE VROOOM!</p>
+<p>🌲 80 Beautiful Trees + Sun + Mountains<br>🏍️ Bike Engine Sound + Smoke!</p>
+<button class="pill active" style="font-size:16px;padding:12px 28px;margin-top:10px" onclick="startGame()">▶️ PLAY EASY MODE</button>
+</div>
+<script>
+const canvas=document.getElementById('gameCanvas');
+const ctx=canvas.getContext('2d');
+let WW=window.innerWidth, HH=window.innerHeight;
+function resize(){let dpr=window.devicePixelRatio||1;canvas.width=WW*dpr;canvas.height=HH*dpr;canvas.style.width=WW+'px';canvas.style.height=HH+'px';ctx.setTransform(dpr,0,0,dpr,0,0);}
+resize();window.addEventListener('resize',()=>{WW=window.innerWidth;HH=window.innerHeight;resize();});
+let mode='foot', lane=1, score=0, dist=0, speed=4.5, baseSpeed=4.5, gameOn=false, jump=0, isSliding=false, voiceOn=true;
+let obstacles=[], coins=[], forest=[], africaVoice=null, audioCtx=null, engineOsc=null, engineGain=null;
+function initVoices(){let v=speechSynthesis.getVoices();africaVoice=v.find(x=>x.lang.includes('en-KE'))||v.find(x=>x.lang.includes('en-NG'))||v.find(x=>x.lang.includes('en-ZA'))||v.find(x=>x.name.toLowerCase().includes('africa'))||v.find(x=>x.lang.startsWith('en'))||v[0];}
+speechSynthesis.onvoiceschanged=initVoices;initVoices();
+function speak(t){if(!voiceOn)return;initVoices();let u=new SpeechSynthesisUtterance(t);if(africaVoice){u.voice=africaVoice;u.lang=africaVoice.lang;}u.rate=0.92;u.pitch=0.88;speechSynthesis.cancel();speechSynthesis.speak(u);}
+function toggleVoice(){voiceOn=!voiceOn;document.getElementById('vTxt').innerText=voiceOn?'African Voice ON':'OFF';if(voiceOn)speak("Gift! Sauti ya Africa!");}
+function initEngine(){try{audioCtx=new (window.AudioContext||window.webkitAudioContext)();engineOsc=audioCtx.createOscillator();engineGain=audioCtx.createGain();let f=audioCtx.createBiquadFilter();f.type='lowpass';f.frequency.value=500;engineOsc.type='sawtooth';engineOsc.frequency.value=70;engineOsc.connect(f);f.connect(engineGain);engineGain.connect(audioCtx.destination);engineGain.gain.value=0;engineOsc.start();}catch(e){}}
+function setEngine(rev){if(!audioCtx)initEngine();if(!engineGain)return;if(mode==='bike'){let r=70+rev*130+speed*10;try{engineOsc.frequency.setTargetAtTime(r,audioCtx.currentTime,0.08);engineGain.gain.setTargetAtTime(rev>0?0.18:0.06,audioCtx.currentTime,0.1);}catch(e){}}else{try{engineGain.gain.setTargetAtTime(0,audioCtx.currentTime,0.2);}catch(e){}}}
+let accHolding=false;
+function setMode(m){mode=m;document.getElementById('bFoot').classList.toggle('active',m==='foot');document.getElementById('bBike').classList.toggle('active',m==='bike');baseSpeed=m==='bike'?7:4.5;document.getElementById('accBtn').innerText=m==='bike'?'HOLD VROOOM 🏍️':'HOLD TO RUN 🏃';if(gameOn)speak(m==='bike'?"Bike Rush! Vroom!":"Foot Run! Kimbia!");}
+function genForest(){forest=[];for(let i=0;i<80;i++){forest.push({x:(Math.random()-0.5)*3.2,z:Math.random()*2000,type:Math.random()<0.75?'tree':'bush',h:70+Math.random()*110,col:['#14532d','#166534','#15803d'][Math.floor(Math.random()*3)]});}}
+genForest();
+function startGame(){gameOn=true;score=0;dist=0;lane=1;obstacles=[];coins=[];jump=0;isSliding=false;speed=baseSpeed;document.getElementById('msg').style.display='none';if(!audioCtx)initEngine();if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();speak(mode==='bike'?"Twende! Bike Rush!":"Sawa Gift! Kimbia!");requestAnimationFrame(loop);}
+function spawn(){if(Math.random()<0.02){obstacles.push({lane:Math.floor(Math.random()*3),z:1200,type:Math.random()<0.6?'log':'stone'});}if(Math.random()<0.06){coins.push({lane:Math.floor(Math.random()*3),z:1200,bob:Math.random()*6});}}
+function loop(){if(!gameOn)return;requestAnimationFrame(loop);spawn();let add=accHolding?2.8:0;speed=baseSpeed+add+dist*0.0008;dist+=speed*0.12;obstacles.forEach(o=>o.z-=speed*8);coins.forEach(c=>{c.z-=speed*8;c.bob+=0.13;});forest.forEach(f=>{f.z-=speed*8;if(f.z<40){f.z=1200+Math.random()*500;f.x=(Math.random()-0.5)*3.2;}});obstacles=obstacles.filter(o=>o.z>-80);coins=coins.filter(c=>c.z>-80);obstacles.forEach((o,idx)=>{if(o.z<130&&o.z>15&&o.lane===lane){if(o.type==='log'&&jump>6){score+=3;obstacles.splice(idx,1);}else{if(jump===0)jump=24;obstacles.splice(idx,1);if(score>0)score=Math.max(0,score-1);} } });coins.forEach((c,idx)=>{if(c.z<110&&c.z>10&&c.lane===lane){coins.splice(idx,1);score+=5;if(score%20===0)speak(["Gift!","Vizuri sana!","Wewe ni shujaa!"][Math.floor(Math.random()*3)]);}});if(jump>0)jump--;draw();document.getElementById('s').innerText=score;document.getElementById('d').innerText=Math.floor(dist);setEngine(accHolding?1:0);}
+function draw(){let horizon=HH*0.38;let sky=ctx.createLinearGradient(0,0,0,horizon);sky.addColorStop(0,'#7dd3fc');sky.addColorStop(0.5,'#bae6fd');sky.addColorStop(1,'#e0f2fe');ctx.fillStyle=sky;ctx.fillRect(0,0,WW,HH);ctx.fillStyle='#fde047';ctx.beginPath();ctx.arc(WW*0.8,HH*0.11,32,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(253,224,71,.25)';ctx.beginPath();ctx.arc(WW*0.8,HH*0.11,52,0,Math.PI*2);ctx.fill();ctx.fillStyle='#052e16';ctx.fillRect(0,horizon,WW,HH-horizon);let roadBottomW=WW*0.96,roadTopW=8;ctx.save();ctx.beginPath();ctx.moveTo(WW/2-roadTopW/2,horizon);ctx.lineTo(WW/2-roadBottomW/2,HH);ctx.lineTo(WW/2+roadBottomW/2,HH);ctx.lineTo(WW/2+roadTopW/2,horizon);ctx.closePath();let rg=ctx.createLinearGradient(0,horizon,0,HH);rg.addColorStop(0,'#d6a57a');rg.addColorStop(1,'#8B4513');ctx.fillStyle=rg;ctx.fill();ctx.strokeStyle='#5a2d0c';ctx.lineWidth=2;ctx.stroke();ctx.setLineDash([16,16]);ctx.strokeStyle='rgba(255,255,255,.45)';ctx.lineWidth=2;for(let l=-0.5;l<=0.5;l+=1){let sx=WW/2+l*roadTopW*0.5, ex=WW/2+l*roadBottomW*0.5;ctx.beginPath();ctx.moveTo(sx,horizon);ctx.lineTo(ex,HH);ctx.stroke();}ctx.setLineDash([]);[...forest].sort((a,b)=>b.z-a.z).forEach(f=>{let scale=300/(f.z+300);if(scale<0.04)return;let y=horizon+(HH-horizon)*(1-scale);let x=WW/2+f.x*WW*0.5*scale;let size=f.h*scale;if(f.type==='tree'){ctx.fillStyle='#3f2210';ctx.fillRect(x-3*scale,y-size*0.3,6*scale,size*0.35);ctx.fillStyle=f.col;ctx.beginPath();ctx.ellipse(x,y-size*0.5,size*0.34,size*0.4,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#22c55e';ctx.beginPath();ctx.ellipse(x-4*scale,y-size*0.55,size*0.18,size*0.20,0,0,Math.PI*2);ctx.fill();}else{ctx.fillStyle='#15803d';ctx.beginPath();ctx.arc(x,y,size*0.18,0,Math.PI*2);ctx.fill();}});coins.forEach(c=>{let scale=300/(c.z+300);if(scale<0.05)return;let y=horizon+(HH-horizon)*(1-scale)-Math.sin(c.bob)*7;let x=WW/2+(c.lane-1)*roadBottomW*0.22*scale;ctx.font=(16*scale+16)+'px Arial';ctx.fillText('🍓',x-12,y);});obstacles.forEach(o=>{let scale=300/(o.z+300);if(scale<0.07)return;let y=horizon+(HH-horizon)*(1-scale);let x=WW/2+(o.lane-1)*roadBottomW*0.22*scale;if(o.type==='log'){ctx.fillStyle='#451a03';ctx.fillRect(x-34*scale,y-5*scale,68*scale,9*scale);ctx.font=(18*scale+10)+'px Arial';ctx.fillText('🪵',x-12,y+3);}else{ctx.font=(26*scale+10)+'px Arial';ctx.fillText('🪨',x-12,y);}});ctx.restore();let laneX=WW/2+(lane-1)*WW*0.21;let playerY=HH*0.78-jump*3;if(isSliding)playerY+=18;ctx.fillStyle='rgba(0,0,0,.4)';ctx.beginPath();ctx.ellipse(laneX,HH*0.86,22,7,0,0,Math.PI*2);ctx.fill();if(mode==='foot'){ctx.font=jump>0?'52px Arial':'54px Arial';ctx.fillText(jump>0?'🦸‍♂️':'🏃‍♂️',laneX-22,playerY);if(accHolding){ctx.fillStyle='rgba(34,197,94,.35)';ctx.beginPath();ctx.ellipse(laneX,playerY+10,28,8,0,0,Math.PI*2);ctx.fill();}}else{ctx.save();ctx.translate(laneX,playerY);ctx.rotate((lane-1)*0.18);ctx.font='62px Arial';ctx.fillText('🏍️',-32,12);if(accHolding){ctx.fillStyle='rgba(180,180,180,.6)';for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(-42-i*10,10+Math.random()*5,3+i*1.5,0,Math.PI*2);ctx.fill();}}ctx.restore();}}
+function handleMove(x){let third=WW/3;if(x<third)lane=Math.max(0,lane-1);else if(x>third*2)lane=Math.min(2,lane+1);else if(jump===0)jump=26;}
+canvas.addEventListener('touchstart',e=>{e.preventDefault();let t=e.touches[0];handleMove(t.clientX);if(t.clientY>HH*0.55)accHolding=true;},{passive:false});
+canvas.addEventListener('touchend',e=>{e.preventDefault();accHolding=false;},{passive:false});
+canvas.addEventListener('mousedown',e=>{handleMove(e.clientX);accHolding=true;});
+canvas.addEventListener('mouseup',()=>accHolding=false);
+document.getElementById('leftZone').addEventListener('touchstart',e=>{e.preventDefault();lane=Math.max(0,lane-1);});
+document.getElementById('rightZone').addEventListener('touchstart',e=>{e.preventDefault();lane=Math.min(2,lane+1);});
+document.getElementById('leftZone').addEventListener('click',()=>lane=Math.max(0,lane-1));
+document.getElementById('rightZone').addEventListener('click',()=>lane=Math.min(2,lane+1));
+document.getElementById('jumpBtn').addEventListener('touchstart',e=>{e.preventDefault();if(jump===0)jump=26;});
+document.getElementById('jumpBtn').addEventListener('click',()=>{if(jump===0)jump=26;});
+let accBtn=document.getElementById('accBtn');
+accBtn.addEventListener('touchstart',e=>{e.preventDefault();accHolding=true;},{passive:false});
+accBtn.addEventListener('touchend',e=>{e.preventDefault();accHolding=false;},{passive:false});
+accBtn.addEventListener('mousedown',()=>accHolding=true);
+accBtn.addEventListener('mouseup',()=>accHolding=false);
+window.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')lane=Math.max(0,lane-1);if(e.key==='ArrowRight')lane=Math.min(2,lane+1);if(e.key==='ArrowUp'||e.code==='Space'){if(jump===0)jump=26;}if(e.key==='Shift')accHolding=true;});
+window.addEventListener('keyup',e=>{if(e.key==='Shift')accHolding=false;});
 </script>
 </body>
 </html>
